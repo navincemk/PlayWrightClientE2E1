@@ -36,12 +36,10 @@ test(`Incorrect username test` , async ({browser})=> {
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.goto(url);
-    await page.locator("#username").fill("reply4navin");
+    await page.locator("#username").fill("wrongusername");
     await page.locator("#password").fill(userpassword);
     await page.getByRole("radio", { name: "user" }).check();
     await page.getByRole("button", { name: "Okay" }).click();
-    await page.getByRole("combobox").selectOption("Consultant");
-    await page.getByRole("checkbox", { name: "I Agree to the terms and conditions" }).click();
     await page.getByRole("button", { name: "Sign In"}).click();
     await page.locator(".alert-danger").waitFor({state: "visible"});
     const errorText = await page.locator(".alert-danger").textContent();

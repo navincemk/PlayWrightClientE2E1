@@ -1,0 +1,87 @@
+[1mdiff --git a/pageObjects/OrderhistoryPage.js b/pageObjects/OrderhistoryPage.js[m
+[1mindex aa73f24..8d39b62 100644[m
+[1m--- a/pageObjects/OrderhistoryPage.js[m
+[1m+++ b/pageObjects/OrderhistoryPage.js[m
+[36m@@ -2,28 +2,21 @@[m [mclass OrderHistoryPage {[m
+     constructor(page) {[m
+         this.page = page;[m
+         this.tableRowLocator = page.locator("tbody tr");[m
+[31m-        this.emailContainerLocator = page.locator(".email-container");[m
+     }[m
+ [m
+[31m-[m
+     async getOrderList(cleanorderid) {[m
+[32m+[m[32m        await this.page.locator("tbody").waitFor();[m
+         const rowcount = await this.tableRowLocator.count();[m
+ [m
+         for(let k=0 ; k<rowcount ; k++) {[m
+[31m-[m
+[31m-        const placedorderid = await this.tableRowLocator.nth(k).locator("th").textContent();[m
+[31m-        [m
+[31m-        if(placedorderid === cleanorderid) {[m
+[31m-            await this.tableRowLocator.nth(k).getByRole('button', { name: 'View' }).click();[m
+[31m-            break;[m
+[31m-        }[m
+[31m-        [m
+[32m+[m[32m            const placedorderid = await this.tableRowLocator.nth(k).locator("th").textContent();[m
+[32m+[m[41m            [m
+[32m+[m[32m            if(placedorderid === cleanorderid) {[m
+[32m+[m[32m                await this.tableRowLocator.nth(k).getByRole('button', { name: 'View' }).click();[m
+[32m+[m[32m                break;[m
+[32m+[m[32m            }[m
+         }[m
+[31m-[m
+[31m-        await this.emailContainerLocator.waitFor();[m
+[31m-        }[m
+[31m-[m
+[31m-    [m
+     }[m
+[32m+[m[32m}[m
+ [m
+ module.exports = {OrderHistoryPage};[m
+\ No newline at end of file[m
+[1mdiff --git a/tests/ClientE2E.spec.js b/tests/ClientE2E.spec.js[m
+[1mindex d54b467..c8a077d 100644[m
+[1m--- a/tests/ClientE2E.spec.js[m
+[1m+++ b/tests/ClientE2E.spec.js[m
+[36m@@ -1,5 +1,12 @@[m
+ const { test, expect } = require('@playwright/test');[m
+ const {POmanager} = require("../pageObjects/POmanager");[m
+[32m+[m[32mconst {LoginPage} = require("../pageObjects/LoginPage");[m
+[32m+[m[32mconst {LandingPage} = require("../pageObjects/LandingPage");[m
+[32m+[m[32mconst {CheckoutPage} = require("../pageObjects/CheckoutPage");[m
+[32m+[m[32mconst {PlaceorderPage} = require("../pageObjects/PlaceorderPage");[m
+[32m+[m[32mconst {OrderConfirmationPage} = require("../pageObjects/OrderconfirmationPage");[m
+[32m+[m[32mconst {OrderHistoryPage} = require("../pageObjects/OrderhistoryPage");[m
+[32m+[m[32mconst {OrderDetailPage} = require("../pageObjects/OrderdetailPage");[m
+ [m
+ //test.describe.configure({ mode: 'serial' });[m
+ //--reporter=line,allure-playwright[m
+[36m@@ -44,8 +51,4 @@[m [mtest(`Place order` , async ({browser}) => {[m
+     const orderidordersummary = await orderdetailpage.getOrderDetails();[m
+     expect(orderidordersummary).toContain(cleanorderid);[m
+ [m
+[31m-    await context.close();[m
+[31m-    await browser.close();[m
+[31m-[m
+[31m-[m
+ });[m
+\ No newline at end of file[m
+[1mdiff --git a/tests/LoginPractise.spec.js b/tests/LoginPractise.spec.js[m
+[1mindex 624a0dd..f3ae36e 100644[m
+[1m--- a/tests/LoginPractise.spec.js[m
+[1m+++ b/tests/LoginPractise.spec.js[m
+[36m@@ -36,12 +36,10 @@[m [mtest(`Incorrect username test` , async ({browser})=> {[m
+     const context = await browser.newContext();[m
+     const page = await context.newPage();[m
+     await page.goto(url);[m
+[31m-    await page.locator("#username").fill("reply4navin");[m
+[32m+[m[32m    await page.locator("#username").fill("wrongusername");[m
+     await page.locator("#password").fill(userpassword);[m
+     await page.getByRole("radio", { name: "user" }).check();[m
+     await page.getByRole("button", { name: "Okay" }).click();[m
+[31m-    await page.getByRole("combobox").selectOption("Consultant");[m
+[31m-    await page.getByRole("checkbox", { name: "I Agree to the terms and conditions" }).click();[m
+     await page.getByRole("button", { name: "Sign In"}).click();[m
+     await page.locator(".alert-danger").waitFor({state: "visible"});[m
+     const errorText = await page.locator(".alert-danger").textContent();[m
