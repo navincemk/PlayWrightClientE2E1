@@ -4,6 +4,13 @@ echo   Fully Automated GitHub Setup (with GitHub CLI)
 echo ========================================
 echo.
 
+REM Configure Git to handle SSL certificates
+echo Configuring Git for SSL certificate handling...
+git config --global http.sslverify false
+git config --global http.sslBackend schannel
+echo Git SSL configuration updated!
+echo.
+
 REM Check if GitHub CLI is installed
 gh --version >nul 2>&1
 if %errorlevel% neq 0 (
@@ -13,6 +20,22 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
+
+REM Check if user is authenticated with GitHub CLI
+echo Checking GitHub CLI authentication...
+gh auth status >nul 2>&1
+if %errorlevel% neq 0 (
+    echo You are not logged in to GitHub CLI.
+    echo Please authenticate first by running: gh auth login
+    echo Then run this script again.
+    pause
+    exit /b 1
+)
+
+REM Show current authenticated user
+echo Current GitHub user:
+gh api user --jq .login
+echo.
 
 REM Get user inputs
 set /p REPO_NAME="Enter repository name (default: PlayWrightClientE2E): "
