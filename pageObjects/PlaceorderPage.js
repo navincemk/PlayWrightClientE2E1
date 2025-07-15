@@ -32,4 +32,4 @@ class PlaceorderPage {
     
 }
 
-module.exports = {PlaceorderPage};
+export {PlaceorderPage};

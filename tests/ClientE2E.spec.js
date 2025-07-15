@@ -1,12 +1,12 @@
-const { test, expect } = require('@playwright/test');
-const {POmanager} = require("../pageObjects/POmanager");
-const {LoginPage} = require("../pageObjects/LoginPage");
-const {LandingPage} = require("../pageObjects/LandingPage");
-const {CheckoutPage} = require("../pageObjects/CheckoutPage");
-const {PlaceorderPage} = require("../pageObjects/PlaceorderPage");
-const {OrderConfirmationPage} = require("../pageObjects/OrderconfirmationPage");
-const {OrderHistoryPage} = require("../pageObjects/OrderhistoryPage");
-const {OrderDetailPage} = require("../pageObjects/OrderdetailPage");
+import { test, expect } from '@playwright/test';
+import {POmanager} from "../pageObjects/POmanager.js";
+import {LoginPage} from "../pageObjects/LoginPage.js";
+import {LandingPage} from "../pageObjects/LandingPage.js";
+import {CheckoutPage} from "../pageObjects/CheckoutPage.js";
+import {PlaceorderPage} from "../pageObjects/PlaceorderPage.js";
+import {OrderConfirmationPage} from "../pageObjects/OrderconfirmationPage.js";
+import {OrderHistoryPage} from "../pageObjects/OrderhistoryPage.js";
+import {OrderDetailPage} from "../pageObjects/OrderdetailPage.js";
 
 //test.describe.configure({ mode: 'serial' });
 //--reporter=line,allure-playwright

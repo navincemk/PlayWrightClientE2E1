@@ -24,4 +24,4 @@ class LandingPage {
    
 }
 
-module.exports = {LandingPage};
+export {LandingPage};

@@ -33,4 +33,4 @@ class OrderConfirmationPage {
     }
 }
 
-module.exports = {OrderConfirmationPage};
+export {OrderConfirmationPage};
