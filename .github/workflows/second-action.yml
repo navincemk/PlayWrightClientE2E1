@@ -1,0 +1,87 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  # Add manual trigger with parameters (like Jenkins)
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - smoke
+        - regression
+        - sanity
+        - Functional
+      browser:
+        description: 'Browser to test'
+        required: true
+        default: 'chromium'
+        type: choice
+        options:
+        - chromium
+        - firefox
+        - all
+      environment:
+        description: 'Environment to test against'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+        - development
+        - pre-production
+        - test environment
+      debug_mode:
+        description: 'Enable debug mode'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    - name: Run Playwright tests
+      run: |
+        # Set default values for push triggers (when inputs are empty)
+        TEST_TYPE="${{ github.event.inputs.test_type || 'all' }}"
+        BROWSER="${{ github.event.inputs.browser || 'all' }}"
+        
+        if [ "$TEST_TYPE" == "smoke" ]; then
+          npx playwright test --grep "@smoke"
+        elif [ "$TEST_TYPE" == "regression" ]; then
+          npx playwright test --grep "@regression" 
+        elif [ "$BROWSER" != "all" ]; then
+          npx playwright test --project=$BROWSER
+        else
+          npx playwright test
+        fi
+      env:
+        CI: true
+        DEBUG_MODE: ${{ github.event.inputs.debug_mode || 'false' }}
+        TEST_ENV: ${{ github.event.inputs.environment || 'production' }}
+    - name: Upload Playwright Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report-${{ github.event.inputs.browser || 'all' }}-${{ github.event.inputs.test_type || 'auto' }}
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 30
