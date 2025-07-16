@@ -4,6 +4,43 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  # Add manual trigger with parameters (like Jenkins)
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - smoke
+        - regression
+      browser:
+        description: 'Browser to test'
+        required: true
+        default: 'chromium'
+        type: choice
+        options:
+        - chromium
+        - firefox
+        - webkit
+        - all
+      environment:
+        description: 'Environment to test against'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+        - development
+      debug_mode:
+        description: 'Enable debug mode'
+        required: false
+        default: false
+        type: boolean
+
 jobs:
   test:
     timeout-minutes: 60
@@ -18,12 +55,23 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test
+      run: |
+        if [ "${{ github.event.inputs.test_type }}" == "smoke" ]; then
+          npx playwright test --grep "@smoke"
+        elif [ "${{ github.event.inputs.test_type }}" == "regression" ]; then
+          npx playwright test --grep "@regression"
+        elif [ "${{ github.event.inputs.browser }}" != "all" ]; then
+          npx playwright test --project=${{ github.event.inputs.browser }}
+        else
+          npx playwright test
+        fi
       env:
         CI: true
+        DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
+        TEST_ENV: ${{ github.event.inputs.environment }}
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report
+        name: playwright-report-${{ github.event.inputs.browser || 'all' }}-${{ github.event.inputs.test_type || 'auto' }}
         path: playwright-report/
         retention-days: 30

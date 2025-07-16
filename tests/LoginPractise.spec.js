@@ -7,7 +7,7 @@ const selectOption = "Consultant";
 const productName = "iphone X";
 
 test.describe.configure({ mode: 'parallel' });
-test(`Login Practise Test` , async({browser}) => {
+test(`Login Practise Test @smoke` , async({browser}) => {
 
     const context = await browser.newContext();
     const page = await context.newPage();
@@ -31,7 +31,7 @@ test(`Login Practise Test` , async({browser}) => {
 
 }),
 
-test(`Incorrect username test` , async ({browser})=> {
+test(`Incorrect username test @regression` , async ({browser})=> {
 
     const context = await browser.newContext();
     const page = await context.newPage();
@@ -51,7 +51,7 @@ test(`Incorrect username test` , async ({browser})=> {
 
 }),
 
-test(`New Window Test`, async ({browser})=>{
+test(`New Window Test @regression`, async ({browser})=>{
 
     const context = await browser.newContext();
     const page = await context.newPage();

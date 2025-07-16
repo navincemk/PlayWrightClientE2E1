@@ -10,7 +10,7 @@ import {OrderDetailPage} from "../pageObjects/OrderdetailPage.js";
 
 //test.describe.configure({ mode: 'serial' });
 //--reporter=line,allure-playwright
-test(`Place order` , async ({browser}) => {
+test(`Place order @smoke @regression` , async ({browser}) => {
 
     const url = "https://rahulshettyacademy.com/client/";
     const username = "reply4navin@gmail.com";
