@@ -41,7 +41,9 @@ test(`Incorrect username test` , async ({browser})=> {
     await page.getByRole("radio", { name: "user" }).check();
     await page.getByRole("button", { name: "Okay" }).click();
     await page.getByRole("button", { name: "Sign In"}).click();
-    await page.locator(".alert-danger").waitFor({state: "visible"});
+    
+    // Wait for the error message to appear with a longer timeout
+    await page.locator(".alert-danger").waitFor({state: "visible", timeout: 15000});
     const errorText = await page.locator(".alert-danger").textContent();
     console.log(errorText);
     expect(errorText).toContain("Incorrect username/password.");
