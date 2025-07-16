@@ -56,22 +56,29 @@ jobs:
       run: npx playwright install --with-deps
     - name: Run Playwright tests
       run: |
-        if [ "${{ github.event.inputs.test_type }}" == "smoke" ]; then
+        # Set default values for push triggers (when inputs are empty)
+        TEST_TYPE="${{ github.event.inputs.test_type || 'all' }}"
+        BROWSER="${{ github.event.inputs.browser || 'all' }}"
+        
+        if [ "$TEST_TYPE" == "smoke" ]; then
           npx playwright test --grep "@smoke"
-        elif [ "${{ github.event.inputs.test_type }}" == "regression" ]; then
-          npx playwright test --grep "@regression"
-        elif [ "${{ github.event.inputs.browser }}" != "all" ]; then
-          npx playwright test --project=${{ github.event.inputs.browser }}
+        elif [ "$TEST_TYPE" == "regression" ]; then
+          npx playwright test --grep "@regression" 
+        elif [ "$BROWSER" != "all" ]; then
+          npx playwright test --project=$BROWSER
         else
           npx playwright test
         fi
       env:
         CI: true
-        DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
-        TEST_ENV: ${{ github.event.inputs.environment }}
-    - uses: actions/upload-artifact@v4
+        DEBUG_MODE: ${{ github.event.inputs.debug_mode || 'false' }}
+        TEST_ENV: ${{ github.event.inputs.environment || 'production' }}
+    - name: Upload Playwright Report
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report-${{ github.event.inputs.browser || 'all' }}-${{ github.event.inputs.test_type || 'auto' }}
-        path: playwright-report/
+        path: |
+          playwright-report/
+          test-results/
         retention-days: 30
