@@ -1,0 +1,135 @@
+name: EAAP Test Suite - Manual Trigger
+
+on:
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Select browser to run tests'
+        required: true
+        default: 'chromium'
+        type: choice
+        options:
+        - chromium
+        - firefox
+        - webkit
+        - all
+      test_type:
+        description: 'Select test type'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+        - smoke
+        - regression
+        - all
+      headed:
+        description: 'Run tests in headed mode'
+        required: false
+        default: false
+        type: boolean
+      generate_allure:
+        description: 'Generate Allure report'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  eaap-test:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright Browsers
+      run: |
+        if [ "${{ github.event.inputs.browser }}" = "all" ]; then
+          npx playwright install --with-deps
+        else
+          npx playwright install --with-deps ${{ github.event.inputs.browser }}
+        fi
+
+    - name: Run EAAP Tests
+      run: |
+        # Build the command based on inputs
+        CMD="npx playwright test tests/eaap.spec.js"
+        
+        # Add browser selection
+        if [ "${{ github.event.inputs.browser }}" != "all" ]; then
+          CMD="$CMD --project=${{ github.event.inputs.browser }}"
+        fi
+        
+        # Add test type filter
+        if [ "${{ github.event.inputs.test_type }}" = "smoke" ]; then
+          CMD="$CMD --grep @smoke"
+        elif [ "${{ github.event.inputs.test_type }}" = "regression" ]; then
+          CMD="$CMD --grep @regression"
+        fi
+        
+        # Add headed mode if selected
+        if [ "${{ github.event.inputs.headed }}" = "true" ]; then
+          CMD="$CMD --headed"
+        fi
+        
+        echo "Running command: $CMD"
+        $CMD
+      continue-on-error: true
+
+    - name: Generate Allure Report
+      if: always() && github.event.inputs.generate_allure == 'true'
+      run: npx allure generate allure-results --clean --output allure-report
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ github.event.inputs.browser }}-${{ github.event.inputs.test_type }}
+        path: |
+          test-results/
+          allure-results/
+        retention-days: 7
+
+    - name: Upload Allure Report
+      if: always() && github.event.inputs.generate_allure == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report-${{ github.event.inputs.browser }}-${{ github.event.inputs.test_type }}
+        path: allure-report/
+        retention-days: 7
+
+    - name: Upload Playwright HTML Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report-${{ github.event.inputs.browser }}-${{ github.event.inputs.test_type }}
+        path: playwright-report/
+        retention-days: 7
+
+    - name: Comment on workflow run
+      if: always()
+      run: |
+        echo "## EAAP Test Results 📊" >> $GITHUB_STEP_SUMMARY
+        echo "- **Browser**: ${{ github.event.inputs.browser }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Test Type**: ${{ github.event.inputs.test_type }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Headed Mode**: ${{ github.event.inputs.headed }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Allure Report**: ${{ github.event.inputs.generate_allure }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Check the artifacts section for detailed reports! 🎯" >> $GITHUB_STEP_SUMMARY
+
+    - name: Deploy to GitHub Pages (if main branch)
+      if: always() && github.ref == 'refs/heads/main' && github.event.inputs.generate_allure == 'true'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: allure-report
+        destination_dir: eaap-allure-report
